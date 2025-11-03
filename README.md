@@ -23,6 +23,3 @@ The proposed approach was evaluated on FER2013 dataset which is publicly availab
 
 We can use Opencv library to capture the image in a real-time and predict the expression. After running the final piece of code i.e., webcam_test, we will get the below result:
 
-
-https://github.com/shivamsingh96/Facial-Expression-Detection-using-CNN-Real-Time-Recognition-with-Webcam/assets/123630632/f94ddf6a-a2ff-464e-8b42-e6bde0e7b734
-
