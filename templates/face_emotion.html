@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Face Emotion Detection - EmotiAI{% endblock %}
+
+{% block content %}
+<div class="detection-page">
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-camera"></i> Face Emotion Detection</h1>
+            <p>Use your camera to detect emotions from facial expressions in real-time</p>
+        </div>
+
+        <div class="detection-container">
+            <div class="camera-section">
+                <div class="video-container">
+                    <video id="video" autoplay muted></video>
+                    <canvas id="overlay" class="overlay-canvas"></canvas>
+                </div>
+                <div class="camera-controls">
+                    <button id="startCamera" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Camera
+                    </button>
+                    <button id="stopCamera" class="btn btn-danger" disabled>
+                        <i class="fas fa-stop"></i> Stop Camera
+                    </button>
+                    <button id="capturePhoto" class="btn btn-secondary" disabled>
+                        <i class="fas fa-camera"></i> Capture & Analyze
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="results-header">
+                    <h3>Detection Results</h3>
+                </div>
+                <div id="results" class="results-container">
+                    <p class="no-results">Start camera and capture to see results</p>
+                </div>
+                <div id="loading" class="loading hidden">
+                    <i class="fas fa-spinner fa-spin"></i> Analyzing...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/face_detection.js') }}"></script>
+{% endblock %}

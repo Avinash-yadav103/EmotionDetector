@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Audio Emotion Detection - EmotiAI{% endblock %}
+
+{% block content %}
+<div class="detection-page">
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="fas fa-microphone"></i> Audio Emotion Detection</h1>
+            <p>Upload an audio file or record your voice to analyze emotional content</p>
+        </div>
+
+        <div class="detection-container">
+            <div class="audio-section">
+                <div class="upload-area">
+                    <div class="upload-zone" id="uploadZone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Upload Audio File</h3>
+                        <p>Drop your audio file here or click to browse</p>
+                        <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.ogg" hidden>
+                    </div>
+                </div>
+
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+
+                <div class="recording-section">
+                    <div class="record-controls">
+                        <button id="recordBtn" class="btn btn-record">
+                            <i class="fas fa-microphone"></i>
+                            <span>Start Recording</span>
+                        </button>
+                        <div id="recordingStatus" class="recording-status hidden">
+                            <i class="fas fa-circle recording-dot"></i>
+                            <span>Recording... <span id="recordingTime">0:00</span></span>
+                        </div>
+                    </div>
+                    <audio id="audioPlayback" controls class="hidden"></audio>
+                </div>
+
+                <div class="audio-controls">
+                    <button id="analyzeBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-brain"></i> Analyze Audio
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="results-header">
+                    <h3>Analysis Results</h3>
+                </div>
+                <div id="audioResults" class="results-container">
+                    <p class="no-results">Upload or record audio to see analysis</p>
+                </div>
+                <div id="audioLoading" class="loading hidden">
+                    <i class="fas fa-spinner fa-spin"></i> Analyzing audio...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/audio_detection.js') }}"></script>
+{% endblock %}
