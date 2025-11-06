@@ -1,43 +1,79 @@
 {% extends "base.html" %}
 
-{% block title %}Face Emotion Detection - EmotiAI{% endblock %}
+{% block title %}Face Emotion Detection{% endblock %}
 
 {% block content %}
-<div class="detection-page">
-    <div class="container">
-        <div class="page-header">
-            <h1><i class="fas fa-camera"></i> Face Emotion Detection</h1>
-            <p>Use your camera to detect emotions from facial expressions in real-time</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-video me-3"></i>Real-Time Face Emotion Detection
+            </h1>
+            <p class="lead">Analyze emotions from facial expressions</p>
         </div>
-
-        <div class="detection-container">
-            <div class="camera-section">
-                <div class="video-container">
-                    <video id="video" autoplay muted></video>
-                    <canvas id="overlay" class="overlay-canvas"></canvas>
+    </div>
+    
+    <div class="row">
+        <!-- Camera Feed Column -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-camera me-2"></i>Camera Feed
+                        <span id="status-indicator" class="badge bg-secondary ms-2">Not Connected</span>
+                    </h5>
                 </div>
-                <div class="camera-controls">
-                    <button id="startCamera" class="btn btn-primary">
-                        <i class="fas fa-play"></i> Start Camera
+                <div class="card-body p-0 position-relative">
+                    <div class="camera-container">
+                        <video id="video" autoplay muted playsinline style="width: 100%; height: auto; background: #000;"></video>
+                        <canvas id="overlay" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+                        
+                        <!-- Loading overlay -->
+                        <div id="loading" class="loading-overlay hidden">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">Processing...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <button id="startCamera" class="btn btn-success btn-lg me-2">
+                        <i class="fas fa-play me-2"></i>Start Camera
                     </button>
-                    <button id="stopCamera" class="btn btn-danger" disabled>
-                        <i class="fas fa-stop"></i> Stop Camera
+                    <button id="stopCamera" class="btn btn-danger btn-lg me-2" disabled>
+                        <i class="fas fa-stop me-2"></i>Stop Camera
                     </button>
-                    <button id="capturePhoto" class="btn btn-secondary" disabled>
-                        <i class="fas fa-camera"></i> Capture & Analyze
+                    <button id="capturePhoto" class="btn btn-primary btn-lg" disabled>
+                        <i class="fas fa-camera me-2"></i>Capture & Analyze
                     </button>
                 </div>
             </div>
-
-            <div class="results-section">
-                <div class="results-header">
-                    <h3>Detection Results</h3>
+        </div>
+        
+        <!-- Results Column -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Detection Results</h5>
                 </div>
-                <div id="results" class="results-container">
-                    <p class="no-results">Start camera and capture to see results</p>
+                <div class="card-body">
+                    <div id="results">
+                        <p class="no-results">Click "Start Camera" to begin emotion detection</p>
+                    </div>
                 </div>
-                <div id="loading" class="loading hidden">
-                    <i class="fas fa-spinner fa-spin"></i> Analyzing...
+            </div>
+            
+            <!-- Instructions -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tips for Best Results</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Ensure good lighting</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Face the camera directly</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Keep face within frame</li>
+                        <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Express emotions clearly</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -45,6 +81,102 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_css %}
+<style>
+.camera-container {
+    position: relative;
+    min-height: 400px;
+    background: #000;
+    border-radius: 0;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 10;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.result-card {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #28a745;
+}
+
+.result-emotion {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+    text-transform: capitalize;
+    margin-bottom: 0.5rem;
+}
+
+.result-confidence {
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.probabilities h4 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: #495057;
+}
+
+.probability-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.probability-item span:first-child {
+    min-width: 80px;
+    font-weight: 500;
+}
+
+.probability-bar {
+    flex: 1;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    margin: 0 0.5rem;
+    overflow: hidden;
+}
+
+.probability-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.no-results {
+    text-align: center;
+    color: #6c757d;
+    padding: 2rem;
+    margin: 0;
+}
+
+#status-indicator {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script src="{{ url_for('static', filename='js/face_detection.js') }}"></script>
 {% endblock %}

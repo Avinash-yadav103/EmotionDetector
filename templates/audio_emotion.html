@@ -1,63 +1,113 @@
 {% extends "base.html" %}
 
-{% block title %}Audio Emotion Detection - EmotiAI{% endblock %}
+{% block title %}Audio Emotion Detection{% endblock %}
 
 {% block content %}
-<div class="detection-page">
-    <div class="container">
-        <div class="page-header">
-            <h1><i class="fas fa-microphone"></i> Audio Emotion Detection</h1>
-            <p>Upload an audio file or record your voice to analyze emotional content</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h1 class="display-5 fw-bold text-success">
+                <i class="fas fa-microphone me-3"></i>Audio Emotion Detection
+            </h1>
+            <p class="lead">Analyze emotions from speech and audio</p>
         </div>
-
-        <div class="detection-container">
-            <div class="audio-section">
-                <div class="upload-area">
-                    <div class="upload-zone" id="uploadZone">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h3>Upload Audio File</h3>
-                        <p>Drop your audio file here or click to browse</p>
-                        <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.ogg" hidden>
-                    </div>
+    </div>
+    
+    <div class="row">
+        <!-- Recording Column -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-microphone me-2"></i>Audio Recording
+                        <span id="recording-status-badge" class="badge bg-secondary ms-2">Ready</span>
+                    </h5>
                 </div>
-
-                <div class="divider">
-                    <span>OR</span>
-                </div>
-
-                <div class="recording-section">
-                    <div class="record-controls">
-                        <button id="recordBtn" class="btn btn-record">
-                            <i class="fas fa-microphone"></i>
-                            <span>Start Recording</span>
-                        </button>
-                        <div id="recordingStatus" class="recording-status hidden">
-                            <i class="fas fa-circle recording-dot"></i>
-                            <span>Recording... <span id="recordingTime">0:00</span></span>
+                <div class="card-body text-center">
+                    <div id="recording-area" class="py-5">
+                        <!-- Microphone Icon -->
+                        <div id="microphone-icon" class="mb-4">
+                            <i class="fas fa-microphone fa-5x text-success" id="mic-icon"></i>
+                        </div>
+                        
+                        <!-- Duration Controls -->
+                        <div id="duration-controls" class="mb-4">
+                            <label for="duration-slider" class="form-label fw-bold">
+                                Recording Duration: <span id="duration-value">3</span> seconds
+                            </label>
+                            <input type="range" class="form-range" id="duration-slider" 
+                                   min="1" max="10" value="3" style="max-width: 300px;">
+                        </div>
+                        
+                        <!-- Recording Button -->
+                        <div id="recording-controls">
+                            <button id="start-recording" class="btn btn-success btn-lg">
+                                <i class="fas fa-record-vinyl me-2"></i>Start Recording
+                            </button>
+                        </div>
+                        
+                        <!-- Recording Progress -->
+                        <div id="recording-progress" class="d-none">
+                            <div class="progress mb-3" style="height: 20px;">
+                                <div id="progress-bar" class="progress-bar bg-danger progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <p class="text-danger fw-bold">
+                                <i class="fas fa-circle blink me-2"></i>Recording... Speak clearly!
+                            </p>
+                        </div>
+                        
+                        <!-- Processing Status -->
+                        <div id="processing-status" class="d-none">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <p class="text-primary fw-bold">Processing audio...</p>
                         </div>
                     </div>
-                    <audio id="audioPlayback" controls class="hidden"></audio>
-                </div>
-
-                <div class="audio-controls">
-                    <button id="analyzeBtn" class="btn btn-primary" disabled>
-                        <i class="fas fa-brain"></i> Analyze Audio
-                    </button>
-                    <button id="clearBtn" class="btn btn-secondary">
-                        <i class="fas fa-trash"></i> Clear
-                    </button>
                 </div>
             </div>
-
-            <div class="results-section">
-                <div class="results-header">
-                    <h3>Analysis Results</h3>
+        </div>
+        
+        <!-- Results Column -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Emotion Analysis</h5>
                 </div>
-                <div id="audioResults" class="results-container">
-                    <p class="no-results">Upload or record audio to see analysis</p>
+                <div class="card-body">
+                    <div id="audio-results">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-music fa-3x mb-3"></i>
+                            <p>Click "Start Recording" to analyze audio emotions</p>
+                        </div>
+                    </div>
                 </div>
-                <div id="audioLoading" class="loading hidden">
-                    <i class="fas fa-spinner fa-spin"></i> Analyzing audio...
+            </div>
+            
+            <!-- Detectable Emotions -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="fas fa-heart me-2"></i>Detectable Emotions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row small">
+                        <div class="col-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-1"><i class="fas fa-circle text-primary me-2"></i>Neutral</li>
+                                <li class="mb-1"><i class="fas fa-circle text-info me-2"></i>Calm</li>
+                                <li class="mb-1"><i class="fas fa-circle text-warning me-2"></i>Happy</li>
+                                <li class="mb-1"><i class="fas fa-circle text-secondary me-2"></i>Sad</li>
+                                <li class="mb-1"><i class="fas fa-circle text-danger me-2"></i>Angry</li>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-1"><i class="fas fa-circle text-dark me-2"></i>Fearful</li>
+                                <li class="mb-1"><i class="fas fa-circle text-success me-2"></i>Disgust</li>
+                                <li class="mb-1"><i class="fas fa-circle text-purple me-2"></i>Surprised</li>
+                                <li class="mb-1"><i class="fas fa-circle text-pink me-2"></i>Pleasant Surprise</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -65,6 +115,97 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_css %}
+<style>
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+.text-purple { color: #6f42c1 !important; }
+.text-pink { color: #e83e8c !important; }
+
+.audio-result-card {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #28a745;
+}
+
+.predicted-emotion {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #28a745;
+    text-transform: capitalize;
+    margin-bottom: 0.5rem;
+}
+
+.confidence-score {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.emotion-probabilities {
+    margin-top: 1rem;
+}
+
+.probability-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.emotion-name {
+    min-width: 100px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.probability-bar-container {
+    flex: 1;
+    height: 12px;
+    background: #e9ecef;
+    border-radius: 6px;
+    margin: 0 0.75rem;
+    overflow: hidden;
+}
+
+.probability-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+}
+
+.probability-percentage {
+    min-width: 50px;
+    text-align: right;
+    font-weight: 600;
+}
+
+#mic-icon {
+    transition: all 0.3s ease;
+}
+
+#mic-icon.recording {
+    color: #dc3545 !important;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script src="{{ url_for('static', filename='js/audio_detection.js') }}"></script>
 {% endblock %}

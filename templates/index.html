@@ -3,68 +3,87 @@
 {% block title %}EmotiAI - Home{% endblock %}
 
 {% block content %}
-<div class="hero-section">
-    <div class="hero-container">
-        <div class="hero-content">
-            <h1 class="hero-title">AI-Powered Emotion Detection</h1>
-            <p class="hero-description">
-                Advanced machine learning models for real-time facial and audio emotion recognition
-            </p>
-            <div class="hero-buttons">
-                <a href="{{ url_for('face_emotion') }}" class="btn btn-primary">
-                    <i class="fas fa-camera"></i>
-                    Face Detection
-                </a>
-                <a href="{{ url_for('audio_emotion') }}" class="btn btn-secondary">
-                    <i class="fas fa-microphone"></i>
-                    Audio Detection
-                </a>
-            </div>
-        </div>
-        <div class="hero-image">
-            <div class="emotion-grid">
-                <div class="emotion-card happy">😊</div>
-                <div class="emotion-card sad">😢</div>
-                <div class="emotion-card angry">😠</div>
-                <div class="emotion-card surprise">😲</div>
-                <div class="emotion-card fear">😨</div>
-                <div class="emotion-card neutral">😐</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="features-section">
+<div class="hero-section text-center py-5">
     <div class="container">
-        <h2 class="section-title">Features</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-eye"></i>
+        <h1 class="display-4 fw-bold text-primary mb-4">
+            <i class="fas fa-brain me-3"></i>Multimodal Emotion Detection
+        </h1>
+        <p class="lead mb-5">Advanced AI-powered emotion recognition using facial expressions and audio analysis</p>
+        
+        <div class="row g-4 mt-5">
+            <!-- Face Emotion Detection Card -->
+            <div class="col-md-6">
+                <div class="card emotion-card h-100 shadow-lg">
+                    <div class="card-body text-center p-4">
+                        <div class="emotion-icon mb-4">
+                            <i class="fas fa-video fa-4x text-primary"></i>
+                        </div>
+                        <h3 class="card-title">Real-Time Face Detection</h3>
+                        <p class="card-text">
+                            Analyze emotions from facial expressions using advanced CNN technology. 
+                            Detects 7 different emotions with 81.31% accuracy.
+                        </p>
+                        <ul class="list-unstyled mb-4">
+                            <li><i class="fas fa-check text-success me-2"></i>Real-time webcam analysis</li>
+                            <li><i class="fas fa-check text-success me-2"></i>7 emotion classes</li>
+                            <li><i class="fas fa-check text-success me-2"></i>81.31% accuracy</li>
+                        </ul>
+                        <a href="{{ url_for('face_emotion') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play me-2"></i>Start Camera
+                        </a>
+                    </div>
                 </div>
-                <h3>Real-time Face Detection</h3>
-                <p>Detect emotions from facial expressions using advanced CNN models trained on FER2013 dataset</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-waveform"></i>
+            
+            <!-- Audio Emotion Detection Card -->
+            <div class="col-md-6">
+                <div class="card emotion-card h-100 shadow-lg">
+                    <div class="card-body text-center p-4">
+                        <div class="emotion-icon mb-4">
+                            <i class="fas fa-microphone fa-4x text-success"></i>
+                        </div>
+                        <h3 class="card-title">Audio Emotion Analysis</h3>
+                        <p class="card-text">
+                            Recognize emotions from speech and audio using mel-spectrogram analysis. 
+                            Supports 9 different emotional states.
+                        </p>
+                        <ul class="list-unstyled mb-4">
+                            <li><i class="fas fa-check text-success me-2"></i>Microphone recording</li>
+                            <li><i class="fas fa-check text-success me-2"></i>9 emotion classes</li>
+                            <li><i class="fas fa-check text-success me-2"></i>MFCC + Mel features</li>
+                        </ul>
+                        <a href="{{ url_for('audio_emotion') }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-microphone me-2"></i>Start Recording
+                        </a>
+                    </div>
                 </div>
-                <h3>Audio Emotion Analysis</h3>
-                <p>Analyze emotions from speech patterns using mel-spectrogram features and deep learning</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-brain"></i>
-                </div>
-                <h3>AI-Powered Accuracy</h3>
-                <p>High accuracy models with over 80% precision on test datasets</p>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="row mt-5 pt-5">
+            <div class="col-12">
+                <h2 class="text-center mb-5">Key Features</h2>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <h3>Instant Results</h3>
-                <p>Get emotion predictions in real-time with confidence scores and probabilities</p>
+            <div class="col-md-3 text-center">
+                <i class="fas fa-bolt fa-3x text-warning mb-3"></i>
+                <h5>Real-Time Processing</h5>
+                <p>Instant emotion detection with minimal latency</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <i class="fas fa-shield-alt fa-3x text-info mb-3"></i>
+                <h5>High Accuracy</h5>
+                <p>State-of-the-art models with professional-grade accuracy</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <i class="fas fa-cogs fa-3x text-secondary mb-3"></i>
+                <h5>Easy Integration</h5>
+                <p>Simple web interface with modern design</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h5>Multi-User Support</h5>
+                <p>Supports multiple simultaneous users</p>
             </div>
         </div>
     </div>
