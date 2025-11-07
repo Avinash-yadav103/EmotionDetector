@@ -570,47 +570,189 @@ body {
     display: none !important;
 }
 
-/* Footer */
-.footer {
-    background: #333;
-    color: white;
+/* Enhanced audio results styling */
+.audio-result-card {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #28a745;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.predicted-emotion {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #28a745;
+    text-transform: capitalize;
+    margin-bottom: 0.5rem;
     text-align: center;
-    padding: 2rem 0;
-    margin-top: auto;
 }
 
-.footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
+.confidence-score {
+    color: #495057;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 600;
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.emotion-probabilities h6 {
+    color: #495057;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
 }
 
-.fade-in {
-    animation: fadeIn 0.5s ease-in-out;
+.probability-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
+.probability-row.top-prediction {
+    background: rgba(40, 167, 69, 0.05);
+    border-left: 3px solid #28a745;
 }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
+.probability-row.low-prediction {
+    opacity: 0.7;
 }
 
-::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 4px;
+.probability-row:hover {
+    background: rgba(0, 123, 255, 0.05);
+    transform: translateX(5px);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #0056b3;
+.emotion-name {
+    min-width: 120px;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: #495057;
+}
+
+.probability-bar-container {
+    flex: 1;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    margin: 0 1rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.probability-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.8s ease-in-out;
+    position: relative;
+}
+
+.probability-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.probability-percentage {
+    min-width: 60px;
+    text-align: right;
+    font-weight: 700;
+    color: #495057;
+}
+
+.debug-info {
+    background: rgba(108, 117, 125, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Recording animation improvements */
+#mic-icon.recording {
+    color: #dc3545 !important;
+    animation: recordingPulse 1s infinite ease-in-out;
+}
+
+@keyframes recordingPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+    50% { 
+        transform: scale(1.2); 
+        opacity: 0.8; 
+    }
+}
+
+/* Progress bar enhancements */
+.progress {
+    height: 25px !important;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+    border-radius: 15px;
+    background: linear-gradient(45deg, #dc3545, #fd7e14);
+    position: relative;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: progressShimmer 1.5s infinite;
+}
+
+@keyframes progressShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Notification improvements */
+.alert.position-fixed {
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: none;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+    color: #721c24;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1, #b6d4d9);
+    color: #0c5460;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
 }
 
 /* Responsive Design */

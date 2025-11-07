@@ -1,91 +1,460 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion AI - Multimodal Emotion Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --card-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
 
-{% block title %}EmotiAI - Home{% endblock %}
+        body {
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-{% block content %}
-<div class="hero-section text-center py-5">
-    <div class="container">
-        <h1 class="display-4 fw-bold text-primary mb-4">
-            <i class="fas fa-brain me-3"></i>Multimodal Emotion Detection
-        </h1>
-        <p class="lead mb-5">Advanced AI-powered emotion recognition using facial expressions and audio analysis</p>
-        
-        <div class="row g-4 mt-5">
-            <!-- Face Emotion Detection Card -->
-            <div class="col-md-6">
-                <div class="card emotion-card h-100 shadow-lg">
-                    <div class="card-body text-center p-4">
-                        <div class="emotion-icon mb-4">
-                            <i class="fas fa-video fa-4x text-primary"></i>
-                        </div>
-                        <h3 class="card-title">Real-Time Face Detection</h3>
-                        <p class="card-text">
-                            Analyze emotions from facial expressions using advanced CNN technology. 
-                            Detects 7 different emotions with 81.31% accuracy.
-                        </p>
-                        <ul class="list-unstyled mb-4">
-                            <li><i class="fas fa-check text-success me-2"></i>Real-time webcam analysis</li>
-                            <li><i class="fas fa-check text-success me-2"></i>7 emotion classes</li>
-                            <li><i class="fas fa-check text-success me-2"></i>81.31% accuracy</li>
-                        </ul>
-                        <a href="{{ url_for('face_emotion') }}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-play me-2"></i>Start Camera
-                        </a>
-                    </div>
-                </div>
-            </div>
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            margin: 0 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+        .hero-section {
+            padding: 4rem 0 2rem 0;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .features-section {
+            padding: 2rem 0 4rem 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: none;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            font-size: 2rem;
+            color: white;
+            position: relative;
+        }
+
+        .face-detection-icon {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+
+        .audio-detection-icon {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .feature-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .feature-description {
+            color: #6c757d;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            color: #495057;
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 2.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 2.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+            color: white;
+            text-decoration: none;
+        }
+
+        .stats-badge {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .tech-specs {
+            background: rgba(108, 117, 125, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .tech-specs small {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
             
-            <!-- Audio Emotion Detection Card -->
-            <div class="col-md-6">
-                <div class="card emotion-card h-100 shadow-lg">
-                    <div class="card-body text-center p-4">
-                        <div class="emotion-icon mb-4">
-                            <i class="fas fa-microphone fa-4x text-success"></i>
-                        </div>
-                        <h3 class="card-title">Audio Emotion Analysis</h3>
-                        <p class="card-text">
-                            Recognize emotions from speech and audio using mel-spectrogram analysis. 
-                            Supports 9 different emotional states.
-                        </p>
-                        <ul class="list-unstyled mb-4">
-                            <li><i class="fas fa-check text-success me-2"></i>Microphone recording</li>
-                            <li><i class="fas fa-check text-success me-2"></i>9 emotion classes</li>
-                            <li><i class="fas fa-check text-success me-2"></i>MFCC + Mel features</li>
-                        </ul>
-                        <a href="{{ url_for('audio_emotion') }}" class="btn btn-success btn-lg">
-                            <i class="fas fa-microphone me-2"></i>Start Recording
+            .feature-card {
+                padding: 2rem;
+            }
+            
+            .feature-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animation for page load */
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-brain me-2"></i>Emotion AI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Home
                         </a>
-                    </div>
-                </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('face_emotion') }}">
+                            <i class="fas fa-video me-1"></i>Face Detection
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('audio_emotion') }}">
+                            <i class="fas fa-microphone me-1"></i>Audio Detection
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
-        
-        <!-- Features Section -->
-        <div class="row mt-5 pt-5">
-            <div class="col-12">
-                <h2 class="text-center mb-5">Key Features</h2>
-            </div>
-            <div class="col-md-3 text-center">
-                <i class="fas fa-bolt fa-3x text-warning mb-3"></i>
-                <h5>Real-Time Processing</h5>
-                <p>Instant emotion detection with minimal latency</p>
-            </div>
-            <div class="col-md-3 text-center">
-                <i class="fas fa-shield-alt fa-3x text-info mb-3"></i>
-                <h5>High Accuracy</h5>
-                <p>State-of-the-art models with professional-grade accuracy</p>
-            </div>
-            <div class="col-md-3 text-center">
-                <i class="fas fa-cogs fa-3x text-secondary mb-3"></i>
-                <h5>Easy Integration</h5>
-                <p>Simple web interface with modern design</p>
-            </div>
-            <div class="col-md-3 text-center">
-                <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                <h5>Multi-User Support</h5>
-                <p>Supports multiple simultaneous users</p>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="fade-in">
+                <h1 class="hero-title">
+                    <i class="fas fa-brain me-3"></i>Multimodal Emotion Detection
+                </h1>
+                <p class="hero-subtitle">
+                    Advanced AI-powered emotion recognition through facial expressions and voice analysis
+                </p>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <!-- Features Section -->
+    <div class="features-section">
+        <div class="container">
+            <div class="row">
+                <!-- Face Detection Card -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon face-detection-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        
+                        <h3 class="feature-title">Real-Time Face Detection</h3>
+                        <p class="feature-description">
+                            Analyze emotions from facial expressions using advanced CNN technology. 
+                            Detects 7 different emotions with high accuracy in real-time.
+                        </p>
+                        
+                        <ul class="feature-list">
+                            <li>Real-time webcam analysis</li>
+                            <li>7 emotion classes detection</li>
+                            <li>High accuracy recognition<span class="stats-badge">81.31% accuracy</span></li>
+                            <li>Live bounding box visualization</li>
+                            <li>Confidence score display</li>
+                            <li>Multi-face detection support</li>
+                        </ul>
+                        
+                        <div class="tech-specs">
+                            <small>
+                                <i class="fas fa-cog me-1"></i>
+                                <strong>Technology:</strong> Convolutional Neural Networks, OpenCV, Keras<br>
+                                <i class="fas fa-list me-1"></i>
+                                <strong>Emotions:</strong> Happy, Sad, Angry, Fear, Surprise, Disgust, Neutral
+                            </small>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('face_emotion') }}" class="btn-primary-custom">
+                                <i class="fas fa-play me-2"></i>Start Camera
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Detection Card -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon audio-detection-icon">
+                            <i class="fas fa-microphone"></i>
+                        </div>
+                        
+                        <h3 class="feature-title">Voice Emotion Recognition</h3>
+                        <p class="feature-description">
+                            Detect emotions from speech patterns and vocal characteristics using 
+                            deep learning models trained on diverse audio datasets.
+                        </p>
+                        
+                        <ul class="feature-list">
+                            <li>Real-time audio recording</li>
+                            <li>9 emotion categories</li>
+                            <li>Advanced feature extraction</li>
+                            <li>Noise suppression technology</li>
+                            <li>Customizable recording duration</li>
+                            <li>Detailed probability breakdown</li>
+                        </ul>
+                        
+                        <div class="tech-specs">
+                            <small>
+                                <i class="fas fa-cog me-1"></i>
+                                <strong>Technology:</strong> Mel-spectrograms, MFCC, Deep Neural Networks<br>
+                                <i class="fas fa-list me-1"></i>
+                                <strong>Emotions:</strong> Happy, Sad, Angry, Fear, Calm, Neutral, Disgust, Surprised
+                            </small>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('audio_emotion') }}" class="btn-success-custom">
+                                <i class="fas fa-microphone me-2"></i>Start Recording
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Info Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="text-center">
+                        <div class="card" style="background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 2rem;">
+                            <h4 class="mb-3" style="color: #2c3e50;">
+                                <i class="fas fa-lightbulb me-2" style="color: #ffc107;"></i>
+                                How It Works
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3">
+                                        <i class="fas fa-camera fa-2x mb-2" style="color: #ff6b6b;"></i>
+                                        <h6>Capture</h6>
+                                        <small class="text-muted">Use your camera or microphone to capture facial expressions or voice</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3">
+                                        <i class="fas fa-brain fa-2x mb-2" style="color: #4ecdc4;"></i>
+                                        <h6>Analyze</h6>
+                                        <small class="text-muted">AI models process the data using advanced machine learning algorithms</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3">
+                                        <i class="fas fa-chart-bar fa-2x mb-2" style="color: #ffc107;"></i>
+                                        <h6>Results</h6>
+                                        <small class="text-muted">Get detailed emotion analysis with confidence scores and probabilities</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add fade-in animation on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.feature-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(30px)';
+                    card.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 200);
+            });
+        });
+
+        // Add hover effects
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -14,6 +14,11 @@ import sounddevice as sd
 import soundfile as sf
 from io import BytesIO
 from PIL import Image
+import scipy.signal
+from scipy.io import wavfile
+import subprocess
+import shutil
+import wave
 
 app = Flask(__name__)
 
@@ -53,42 +58,182 @@ def initialize_models():
     except Exception as e:
         print(f"❌ Error loading models: {e}")
 
-def extract_audio_features(file_path, sr=16000, duration=3, n_mels=64):
-    """Extract mel spectrogram features for audio emotion prediction"""
+def convert_webm_to_wav_ffmpeg(input_path, output_path):
+    """Convert WebM to WAV using FFmpeg"""
     try:
-        audio, _ = librosa.load(file_path, sr=sr, duration=duration)
+        cmd = [
+            'ffmpeg', '-i', input_path, 
+            '-ar', '22050', '-ac', '1', 
+            '-acodec', 'pcm_s16le', 
+            '-y', output_path
+        ]
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"FFmpeg conversion failed: {e}")
+        return False
+    except Exception as e:
+        print(f"FFmpeg not available: {e}")
+        return False
+
+def convert_webm_with_pydub(input_path, output_path):
+    """Convert WebM to WAV using pydub"""
+    try:
+        from pydub import AudioSegment
+        audio = AudioSegment.from_file(input_path, format="webm")
+        audio = audio.set_channels(1).set_frame_rate(22050)
+        audio.export(output_path, format="wav")
+        return True
+    except Exception as e:
+        print(f"Pydub conversion failed: {e}")
+        return False
+
+def extract_audio_from_webm(webm_path):
+    """Extract raw audio data from WebM file using multiple methods"""
+    try:
+        # Method 1: Try direct librosa loading with different parameters
+        methods = [
+            lambda: librosa.load(webm_path, sr=22050, duration=10),
+            lambda: librosa.load(webm_path, sr=16000, duration=10),
+            lambda: librosa.load(webm_path, sr=None, duration=10),
+        ]
         
-        # Ensure fixed length
-        max_len = int(sr * duration)
-        if len(audio) > max_len:
-            audio = audio[:max_len]
+        for i, method in enumerate(methods, 1):
+            try:
+                print(f"Trying direct librosa method {i}...")
+                audio_data, sr = method()
+                if audio_data is not None and len(audio_data) > 0:
+                    print(f"✅ Direct librosa method {i} succeeded")
+                    # Resample to 22050 if needed
+                    if sr != 22050:
+                        audio_data = librosa.resample(audio_data, orig_sr=sr, target_sr=22050)
+                    return audio_data, 22050
+            except Exception as e:
+                print(f"Direct librosa method {i} failed: {e}")
+                continue
+        
+        # Method 2: Try conversion then loading
+        wav_path = webm_path.replace('.webm', '_converted.wav')
+        
+        # Try FFmpeg first
+        if convert_webm_to_wav_ffmpeg(webm_path, wav_path):
+            try:
+                audio_data, sr = librosa.load(wav_path, sr=22050, duration=10)
+                os.unlink(wav_path)  # Clean up
+                return audio_data, sr
+            except Exception as e:
+                print(f"Loading converted FFmpeg file failed: {e}")
+        
+        # Try pydub
+        if convert_webm_with_pydub(webm_path, wav_path):
+            try:
+                audio_data, sr = librosa.load(wav_path, sr=22050, duration=10)
+                os.unlink(wav_path)  # Clean up
+                return audio_data, sr
+            except Exception as e:
+                print(f"Loading converted pydub file failed: {e}")
+        
+        return None, None
+        
+    except Exception as e:
+        print(f"All audio extraction methods failed: {e}")
+        return None, None
+
+def extract_audio_features_v2(audio_data, sr=22050, duration=3):
+    """Enhanced audio feature extraction with multiple feature types"""
+    try:
+        # Ensure audio is the right length
+        target_length = int(sr * duration)
+        if len(audio_data) > target_length:
+            audio_data = audio_data[:target_length]
         else:
-            pad_length = max_len - len(audio)
-            audio = np.pad(audio, (0, pad_length))
+            audio_data = np.pad(audio_data, (0, target_length - len(audio_data)))
         
-        # Extract mel spectrogram
+        # Remove silence and normalize
+        if np.max(np.abs(audio_data)) > 0:
+            audio_data = audio_data / (np.max(np.abs(audio_data)) + 1e-6)
+        
+        # 4. Mel spectrogram (for CNN model) - simplified approach
         mel_spec = librosa.feature.melspectrogram(
-            y=audio, 
+            y=audio_data, 
             sr=sr, 
-            n_mels=n_mels, 
+            n_mels=128,
             fmax=8000,
             hop_length=512,
             n_fft=2048
         )
+        
+        # Convert to dB scale
         mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
         
-        # Normalize between 0 and 1
-        if mel_spec_db.max() != mel_spec_db.min():
-            mel_spec_db = (mel_spec_db - mel_spec_db.min()) / (mel_spec_db.max() - mel_spec_db.min())
+        # Normalize
+        if np.std(mel_spec_db) > 0:
+            mel_spec_normalized = (mel_spec_db - np.mean(mel_spec_db)) / (np.std(mel_spec_db) + 1e-6)
         else:
-            mel_spec_db = np.zeros_like(mel_spec_db)
+            mel_spec_normalized = mel_spec_db
         
-        # Add channel dimension
-        mel_spec_db = np.expand_dims(mel_spec_db, axis=-1)
-        return mel_spec_db.astype(np.float32)
+        # Resize to expected input shape
+        target_width = 130
+        if mel_spec_normalized.shape[1] > target_width:
+            mel_spec_normalized = mel_spec_normalized[:, :target_width]
+        elif mel_spec_normalized.shape[1] < target_width:
+            pad_width = target_width - mel_spec_normalized.shape[1]
+            mel_spec_normalized = np.pad(mel_spec_normalized, ((0, 0), (0, pad_width)), mode='constant')
+        
+        # Add channel dimension for CNN
+        mel_spec_normalized = np.expand_dims(mel_spec_normalized, axis=-1)
+        
+        return mel_spec_normalized.astype(np.float32)
+        
     except Exception as e:
-        print(f"Error extracting audio features: {e}")
+        print(f"Error in feature extraction: {e}")
         return None
+
+def load_audio_file(file_path):
+    """Try multiple methods to load audio file"""
+    audio_data = None
+    sr = 22050
+    
+    methods = [
+        # Method 1: Direct librosa load
+        lambda: librosa.load(file_path, sr=sr, duration=10),
+        # Method 2: Try with different backends
+        lambda: librosa.load(file_path, sr=sr, duration=10, res_type='kaiser_fast'),
+        # Method 3: Try soundfile first then librosa
+        lambda: load_with_soundfile(file_path, sr),
+    ]
+    
+    for i, method in enumerate(methods, 1):
+        try:
+            print(f"Trying audio loading method {i}...")
+            audio_data, loaded_sr = method()
+            if audio_data is not None and len(audio_data) > 0:
+                print(f"✅ Audio loaded successfully with method {i}")
+                return audio_data, loaded_sr
+        except Exception as e:
+            print(f"Method {i} failed: {e}")
+            continue
+    
+    return None, None
+
+def load_with_soundfile(file_path, target_sr):
+    """Load audio using soundfile then resample"""
+    try:
+        import soundfile as sf
+        audio_data, sr = sf.read(file_path)
+        
+        # Convert to mono if stereo
+        if len(audio_data.shape) > 1:
+            audio_data = np.mean(audio_data, axis=1)
+        
+        # Resample if needed
+        if sr != target_sr:
+            audio_data = librosa.resample(audio_data, orig_sr=sr, target_sr=target_sr)
+            
+        return audio_data, target_sr
+    except Exception as e:
+        print(f"Soundfile loading failed: {e}")
+        raise e
 
 @app.route('/')
 def index():
@@ -182,58 +327,94 @@ def predict_face():
 
 @app.route('/predict-audio', methods=['POST'])
 def predict_audio():
-    """Record and predict emotion from audio"""
+    """Enhanced audio emotion prediction with WebM support"""
     try:
         if audio_model is None:
             return jsonify({'error': 'Audio model not loaded'})
         
-        # Check if it's a JSON request (for recording) or form data (file upload)
-        if request.is_json:
-            # Recording from microphone
-            data = request.get_json()
-            duration = float(data.get('duration', 3))
-            sr = 16000
-            
-            print(f"Recording {duration} seconds from microphone...")
-            
-            # Record audio
-            recording = sd.rec(int(duration * sr), samplerate=sr, channels=1, dtype='float32')
-            sd.wait()  # Wait for recording to complete
-            
-            # Save to temporary file
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-                sf.write(tmp.name, recording, sr)
-                temp_path = tmp.name
-            
-        else:
-            # File upload
-            if 'audio' not in request.files:
-                return jsonify({'error': 'No audio file provided'})
-            
-            audio_file = request.files['audio']
-            if audio_file.filename == '':
-                return jsonify({'error': 'No audio file selected'})
-            
-            # Save uploaded file
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-                audio_file.save(tmp.name)
-                temp_path = tmp.name
-                duration = 3  # Default duration for file analysis
+        temp_paths = []
         
         try:
-            # Extract features
-            features = extract_audio_features(temp_path, sr=16000, duration=duration)
+            # Check if it's a file upload or JSON request
+            if request.files and 'audio' in request.files:
+                # Handle file upload from MediaRecorder
+                audio_file = request.files['audio']
+                
+                if audio_file.filename == '':
+                    return jsonify({'error': 'No audio file selected'})
+                
+                # Read file content to check size
+                file_content = audio_file.read()
+                audio_file.seek(0)  # Reset file pointer
+                file_size = len(file_content)
+                
+                print(f"🎤 Received audio file: {audio_file.filename}, size: {file_size} bytes")
+                
+                if file_size < 100:
+                    return jsonify({'error': 'Audio file is too small. Please record a longer audio.'})
+                
+                # Save the file
+                file_ext = '.webm'  # Default for MediaRecorder
+                if audio_file.content_type:
+                    if 'wav' in audio_file.content_type:
+                        file_ext = '.wav'
+                    elif 'mp4' in audio_file.content_type:
+                        file_ext = '.mp4'
+                    elif 'ogg' in audio_file.content_type:
+                        file_ext = '.ogg'
+                
+                with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as tmp:
+                    tmp.write(file_content)
+                    temp_path = tmp.name
+                    temp_paths.append(temp_path)
+                
+                print(f"📁 Saved audio file to: {temp_path}")
+                
+                # Extract audio data using enhanced method
+                if file_ext == '.webm':
+                    audio_data, sr = extract_audio_from_webm(temp_path)
+                else:
+                    # Try direct loading for other formats
+                    try:
+                        audio_data, sr = librosa.load(temp_path, sr=22050, duration=10)
+                    except Exception as e:
+                        print(f"Direct loading failed: {e}")
+                        audio_data, sr = None, None
+                
+                if audio_data is None or len(audio_data) == 0:
+                    return jsonify({'error': 'Could not extract audio from the uploaded file. Please try recording again or use a different browser.'})
+                    
+            else:
+                # Handle JSON request (server-side recording - not recommended for WebM issues)
+                return jsonify({'error': 'Server-side recording not supported. Please use the web interface for recording.'})
+            
+            # Validate audio data
+            if len(audio_data) == 0:
+                return jsonify({'error': 'No audio data found. Please try recording again.'})
+            
+            if np.max(np.abs(audio_data)) < 0.001:
+                return jsonify({'error': 'Audio is too quiet. Please speak louder and try again.'})
+            
+            print(f"📊 Audio stats: length={len(audio_data)}, max_amplitude={np.max(np.abs(audio_data)):.4f}, sample_rate={sr}")
+            
+            # Extract features using the enhanced method
+            features = extract_audio_features_v2(audio_data, sr=sr, duration=3)
+            
             if features is None:
-                return jsonify({'error': 'Failed to extract audio features'})
+                return jsonify({'error': 'Failed to extract audio features. Please try again with a different recording.'})
+            
+            print(f"🔧 Feature shape: {features.shape}")
             
             # Add batch dimension
             x = np.expand_dims(features, axis=0)
             
-            # Predict emotion
+            # Make prediction
             predictions = audio_model.predict(x, verbose=0)
             probs = predictions[0]
             
-            # Audio emotion labels (matching your model)
+            print(f"🎯 Raw predictions: {probs}")
+            
+            # Audio emotion labels
             labels = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised', 'pleasant_surprise']
             
             # Get predicted emotion
@@ -241,46 +422,40 @@ def predict_audio():
             predicted_emotion = labels[max_index]
             confidence = float(probs[max_index])
             
-            # Create probabilities dictionary
-            probabilities = {labels[i]: float(probs[i]) for i in range(len(labels))}
+            print(f"🏆 Predicted: {predicted_emotion} with confidence: {confidence:.4f}")
             
-            # Create results for different response formats
-            if request.is_json:
-                # Recording response format
-                results = []
-                for i, prob in enumerate(probs):
-                    results.append({
-                        'emotion': labels[i],
-                        'probability': float(prob)
-                    })
-                
-                results.sort(key=lambda x: x['probability'], reverse=True)
-                
-                return jsonify({
-                    'predicted_emotion': predicted_emotion,
+            # File upload response format
+            probabilities = {labels[i]: float(probs[i]) for i in range(len(labels))}
+            return jsonify({
+                'result': {
+                    'emotion': predicted_emotion,
                     'confidence': confidence,
-                    'all_predictions': results
-                })
-            else:
-                # File upload response format
-                return jsonify({
-                    'result': {
-                        'emotion': predicted_emotion,
-                        'confidence': confidence,
-                        'probabilities': probabilities
-                    }
-                })
+                    'probabilities': probabilities
+                },
+                'debug_info': {
+                    'audio_length': len(audio_data),
+                    'sample_rate': sr,
+                    'max_amplitude': float(np.max(np.abs(audio_data))),
+                    'feature_shape': list(features.shape),
+                    'file_size': file_size
+                }
+            })
             
         finally:
-            # Clean up temporary file
-            try:
-                os.unlink(temp_path)
-            except:
-                pass
+            # Clean up all temporary files
+            for temp_path in temp_paths:
+                try:
+                    if os.path.exists(temp_path):
+                        os.unlink(temp_path)
+                        print(f"🗑️ Cleaned up temp file: {temp_path}")
+                except Exception as cleanup_error:
+                    print(f"⚠️ Could not clean up {temp_path}: {cleanup_error}")
             
     except Exception as e:
-        print(f"Error in audio prediction: {e}")
-        return jsonify({'error': f'Audio prediction failed: {str(e)}'})
+        print(f"❌ Error in audio prediction: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Audio processing failed: {str(e)}'})
 
 # Initialize models when starting the app
 initialize_models()
